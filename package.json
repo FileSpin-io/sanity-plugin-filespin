@@ -1,0 +1,73 @@
+{
+  "name": "sanity-plugin-filespin",
+  "version": "1.0.0",
+  "description": "Browse and insert FileSpin images and videos in Sanity Studio. Files stay in FileSpin and are served from the FileSpin CDN.",
+  "keywords": [
+    "sanity",
+    "sanity-plugin",
+    "filespin",
+    "dam",
+    "digital-asset-management",
+    "asset-source",
+    "images",
+    "video",
+    "cdn"
+  ],
+  "homepage": "https://developers.filespin.io/guides/sanity/",
+  "bugs": {
+    "url": "https://github.com/FileSpin-io/sanity-plugin-filespin/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FileSpin-io/sanity-plugin-filespin"
+  },
+  "license": "MIT",
+  "author": "FileSpin <support@filespin.io>",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "plugin-kit verify-package --silent && pkg-utils build --strict --check --clean",
+    "format": "oxfmt",
+    "link-watch": "plugin-kit link-watch",
+    "lint": "oxlint",
+    "prepublishOnly": "npm run build",
+    "watch": "pkg-utils watch --strict"
+  },
+  "dependencies": {
+    "@sanity/icons": "^5.4.0",
+    "@sanity/ui": "^4.4.12"
+  },
+  "devDependencies": {
+    "@sanity/pkg-utils": "^13.0.12",
+    "@sanity/plugin-kit": "^10.1.1",
+    "@types/react": "^19.3.1",
+    "oxfmt": "^0.80.0",
+    "oxlint": "^1.95.0",
+    "oxlint-tsgolint": "^7.0.2008",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "sanity": "^6.25.0",
+    "styled-components": "^6.7.0",
+    "typescript": "^6.0.3"
+  },
+  "peerDependencies": {
+    "react": "^19.2",
+    "react-dom": "^19.2",
+    "sanity": "^5 || ^6.0.0-0",
+    "styled-components": "^6.1"
+  },
+  "engines": {
+    "node": ">=20.19 <22 || >=22.12"
+  }
+}
