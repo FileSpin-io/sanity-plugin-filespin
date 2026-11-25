@@ -1,10 +1,11 @@
 import {defineField, defineType, type ObjectDefinition} from 'sanity'
-import type {ResolvedConfig} from '../config'
+
 import {describe, ValueThumb} from '../components/AssetCard'
 import {FileSpinDiff} from '../components/FileSpinDiff'
 import {FileSpinIcon} from '../components/FileSpinIcon'
 import {makeFileSpinInput, type FileSpinAssetOptions} from '../components/FileSpinInput'
-import type {FileSpinAssetValue} from '../types'
+import type {ResolvedConfig} from '../config'
+import {isAssetValue} from '../types'
 
 export const FILESPIN_ASSET = 'filespin.asset'
 
@@ -60,9 +61,8 @@ export function filespinAssetType(config: ResolvedConfig) {
         version: 'version',
         alt: 'alt',
       },
-      prepare(v: Partial<FileSpinAssetValue>) {
-        if (!v.assetId) return {title: 'No FileSpin asset', media: FileSpinIcon}
-        const value = v as FileSpinAssetValue
+      prepare(value: Record<string, unknown>) {
+        if (!isAssetValue(value)) return {title: 'No FileSpin asset', media: FileSpinIcon}
         return {
           title: value.alt || value.name || value.assetId,
           subtitle: describe(value),
@@ -75,7 +75,10 @@ export function filespinAssetType(config: ResolvedConfig) {
 
 declare module 'sanity' {
   // Lets `defineField({type: 'filespin.asset', options: {accept: 'image'}})` type-check.
-  export interface FileSpinAssetDefinition extends Omit<ObjectDefinition, 'type' | 'fields' | 'options'> {
+  export interface FileSpinAssetDefinition extends Omit<
+    ObjectDefinition,
+    'type' | 'fields' | 'options'
+  > {
     type: typeof FILESPIN_ASSET
     options?: FileSpinAssetOptions
   }

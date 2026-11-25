@@ -4,20 +4,21 @@
  * the field stores its CDN URL and facts (see FileSpinAssetValue).
  */
 
-import {useCallback, useState, type ComponentType} from 'react'
-import {set, unset, type ObjectInputProps, type ObjectSchemaType} from 'sanity'
-import {Box, Button, Card, Dialog, Flex, Stack, Text, TextInput} from '@sanity/ui'
-import {Menu, MenuButton, MenuDivider, MenuItem} from '@sanity/ui/menu'
-import {useToast} from '@sanity/ui/toast'
 import {CopyIcon} from '@sanity/icons/Copy'
 import {EllipsisHorizontalIcon} from '@sanity/icons/EllipsisHorizontal'
 import {LaunchIcon} from '@sanity/icons/Launch'
 import {ResetIcon} from '@sanity/icons/Reset'
 import {TrashIcon} from '@sanity/icons/Trash'
-import type {ResolvedConfig} from '../config'
+import {Box, Button, Card, Dialog, Flex, Stack, Text, TextInput} from '@sanity/ui'
+import {Menu, MenuButton, MenuDivider, MenuItem} from '@sanity/ui/menu'
+import {useToast} from '@sanity/ui/toast'
+import {useState} from 'react'
+import {set, unset, type ObjectInputProps} from 'sanity'
+
 import type {FileSpinAsset} from '../api/types'
-import type {FileSpinAssetValue} from '../types'
+import type {ResolvedConfig} from '../config'
 import {dashboardAssetUrl, toValue} from '../lib/media'
+import {isAssetValue} from '../types'
 import {AssetCard} from './AssetCard'
 import {Browser, type Only} from './Browser'
 import {FileSpinIcon} from './FileSpinIcon'
@@ -29,30 +30,34 @@ export interface FileSpinAssetOptions {
   accept?: 'image' | 'video'
 }
 
-type Props = ObjectInputProps<FileSpinAssetValue, ObjectSchemaType & {options?: FileSpinAssetOptions}>
+/** The field's `options.accept`, if the schema set one. */
+function acceptOf(options: unknown): Only {
+  if (typeof options === 'object' && options !== null && 'accept' in options) {
+    if (options.accept === 'image' || options.accept === 'video') return options.accept
+  }
+  return undefined
+}
 
-function Input(props: Props) {
-  const {value, onChange, readOnly, schemaType, id} = props
+function Input(props: ObjectInputProps) {
+  const {onChange, readOnly, schemaType, id} = props
+  const value = isAssetValue(props.value) ? props.value : undefined
   const {client, config} = useFileSpin()
   const toast = useToast()
   const [open, setOpen] = useState<null | 'choose' | 'version'>(null)
-  const only: Only = schemaType.options?.accept
+  const only = acceptOf(schemaType.options)
 
-  const onPick = useCallback(
-    async (a: FileSpinAsset, variant: string) => {
-      // Search results lack conversions and the image version: read the full asset
-      // (Details already did).
-      const full = a.addons_info ? a : await client.asset(a.id)
-      const next = toValue(config, full, variant)
-      if ('error' in next) throw new Error(next.error)
-      if (only && next.kind !== only) throw new Error(`This field takes ${only}s only.`)
-      // Alt text describes the picture, so it stays only for the same asset.
-      const alt = value?.assetId === next.assetId ? value.alt : undefined
-      onChange(set({...next, ...(alt ? {alt} : {})}))
-      setOpen(null)
-    },
-    [client, config, only, onChange, value?.alt, value?.assetId],
-  )
+  const onPick = async (a: FileSpinAsset, variant: string) => {
+    // Search results lack conversions and the image version: read the full asset
+    // (Details already did).
+    const full = a.addons_info ? a : await client.asset(a.id)
+    const next = toValue(config, full, variant)
+    if ('error' in next) throw new Error(next.error)
+    if (only && next.kind !== only) throw new Error(`This field takes ${only}s only.`)
+    // Alt text describes the picture, so it stays only for the same asset.
+    const alt = value?.assetId === next.assetId ? value.alt : undefined
+    onChange(set({...next, ...(alt ? {alt} : {})}))
+    setOpen(null)
+  }
 
   const dialog = open && (
     <Dialog
@@ -89,7 +94,11 @@ function Input(props: Props) {
         <Card padding={4} radius={2} border style={{borderStyle: 'dashed'}}>
           <Flex direction="column" align="center" gap={3}>
             <Text size={1} muted>
-              {only === 'video' ? 'No video chosen' : only === 'image' ? 'No image chosen' : 'Nothing chosen yet'}
+              {only === 'video'
+                ? 'No video chosen'
+                : only === 'image'
+                  ? 'No image chosen'
+                  : 'Nothing chosen yet'}
             </Text>
             <Button
               icon={FileSpinIcon}
@@ -120,7 +129,12 @@ function Input(props: Props) {
             <AssetCard value={value} />
           </Box>
           <Flex gap={1} align="center">
-            <Button mode="ghost" text="Replace" disabled={readOnly} onClick={() => setOpen('choose')} />
+            <Button
+              mode="ghost"
+              text="Replace"
+              disabled={readOnly}
+              onClick={() => setOpen('choose')}
+            />
             <MenuButton
               id={`${id}-filespin-menu`}
               button={<Button mode="bleed" icon={EllipsisHorizontalIcon} aria-label="More" />}
@@ -179,13 +193,12 @@ function Input(props: Props) {
   )
 }
 
-export function makeFileSpinInput(config: ResolvedConfig): ComponentType<ObjectInputProps> {
-  function FileSpinAssetInput(props: Props) {
+export function makeFileSpinInput(config: ResolvedConfig) {
+  return function FileSpinAssetInput(props: ObjectInputProps) {
     return (
       <FileSpinProvider config={config}>
         <Input {...props} />
       </FileSpinProvider>
     )
   }
-  return FileSpinAssetInput as unknown as ComponentType<ObjectInputProps>
 }

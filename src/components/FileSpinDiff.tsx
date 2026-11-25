@@ -1,5 +1,6 @@
-import {DiffFromTo, type DiffComponent, type ObjectDiff} from 'sanity'
 import {Box, Card, Text} from '@sanity/ui'
+import {DiffFromTo, type DiffComponent, type ObjectDiff} from 'sanity'
+
 import type {FileSpinAssetValue} from '../types'
 import {AssetCard} from './AssetCard'
 

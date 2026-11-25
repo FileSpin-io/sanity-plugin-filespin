@@ -87,7 +87,10 @@ export async function requestDeviceCode(config: ResolvedConfig): Promise<DeviceA
   }
   const {status, json} = result
   if (status !== 200 || !json?.device_code) {
-    throw new SignInError('server', `FileSpin couldn’t start sign-in (${json?.error || `HTTP ${status}`}).`)
+    throw new SignInError(
+      'server',
+      `FileSpin couldn’t start sign-in (${json?.error || `HTTP ${status}`}).`,
+    )
   }
   return {
     ...json,
@@ -107,7 +110,9 @@ export async function waitForApproval(
   let intervalMs = (auth.interval || 5) * 1000
   const deadline = Date.now() + (auth.expires_in || 600) * 1000
   while (Date.now() < deadline) {
-    // Polling sooner than the interval only earns a slow_down.
+    // Polling sooner than the interval only earns a slow_down. Each poll waits
+    // for the last on purpose.
+    // oxlint-disable-next-line no-await-in-loop
     await new Promise<void>((resolve) => {
       const t = setTimeout(resolve, intervalMs)
       signal.addEventListener('abort', () => {
@@ -118,6 +123,7 @@ export async function waitForApproval(
     if (signal.aborted) throw new SignInError('cancelled', 'Sign-in cancelled.')
     let result: {status: number; json: any}
     try {
+      // oxlint-disable-next-line no-await-in-loop
       result = await postForm(config, '/oauth/token', {
         grant_type: GRANT_TYPE,
         client_id: config.clientId,
@@ -139,7 +145,10 @@ export async function waitForApproval(
       case 'expired_token':
         throw new SignInError('expired', 'The sign-in code expired.')
       default:
-        throw new SignInError('server', `FileSpin sign-in failed (${json?.error || `HTTP ${status}`}).`)
+        throw new SignInError(
+          'server',
+          `FileSpin sign-in failed (${json?.error || `HTTP ${status}`}).`,
+        )
     }
   }
   throw new SignInError('expired', 'The sign-in code expired.')
@@ -160,5 +169,7 @@ export async function refreshTokens(
 
 /** Best effort: tell FileSpin to forget the token on sign-out. */
 export async function revoke(config: ResolvedConfig, token: string) {
-  await postForm(config, '/oauth/revoke', {token, client_id: config.clientId}).catch(() => undefined)
+  await postForm(config, '/oauth/revoke', {token, client_id: config.clientId}).catch(
+    () => undefined,
+  )
 }

@@ -38,3 +38,17 @@ export interface FileSpinAssetValue {
   /** Alternative text, written in Sanity. */
   alt?: string
 }
+
+/** A stored value with what the plugin needs to show it. */
+export function isAssetValue(v: unknown): v is FileSpinAssetValue {
+  return (
+    typeof v === 'object' &&
+    v !== null &&
+    'assetId' in v &&
+    typeof v.assetId === 'string' &&
+    'cdn' in v &&
+    typeof v.cdn === 'string' &&
+    'kind' in v &&
+    (v.kind === 'image' || v.kind === 'video')
+  )
+}

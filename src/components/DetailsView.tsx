@@ -3,12 +3,14 @@
  * use (an image's formats or a video's web versions), and its metadata.
  */
 
-import {useEffect, useMemo, useState} from 'react'
-import {Box, Button, Card, Flex, Grid, Select, Spinner, Stack, Text} from '@sanity/ui'
 import {ArrowLeftIcon} from '@sanity/icons/ArrowLeft'
 import {LaunchIcon} from '@sanity/icons/Launch'
+import {Box, Button, Card, Flex, Grid, Select, Spinner, Stack, Text} from '@sanity/ui'
+import {useEffect, useMemo, useState} from 'react'
 import {styled} from 'styled-components'
+
 import type {FileSpinAsset} from '../api/types'
+import {humanise} from '../lib/filters'
 import {
   bestVersion,
   dashboardAssetUrl,
@@ -20,7 +22,6 @@ import {
   typeLabel,
   videoVersions,
 } from '../lib/media'
-import {humanise} from '../lib/filters'
 import {transcodeUrl} from '../url'
 import {useFileSpin} from './FileSpinProvider'
 
@@ -54,10 +55,11 @@ function Fact({label, value}: {label: string; value?: string | number}) {
 }
 
 function show(v: unknown): string {
-  if (v === null || v === undefined) return ''
+  if (typeof v === 'string') return v
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v)
   if (Array.isArray(v)) return v.map(show).join(', ')
-  if (typeof v === 'object') return JSON.stringify(v)
-  return String(v)
+  if (v && typeof v === 'object') return JSON.stringify(v)
+  return ''
 }
 
 export function DetailsView(props: {
@@ -75,18 +77,19 @@ export function DetailsView(props: {
   const [variant, setVariant] = useState('')
   const kind = kindOf(props.asset)
 
+  // The parent keys this screen by asset id, so state starts fresh per asset.
   useEffect(() => {
     let live = true
-    setFull(null)
-    setError('')
-    client
-      .asset(props.asset.id)
-      .then((a) => {
+    void (async () => {
+      try {
+        const a = await client.asset(props.asset.id)
         if (!live) return
         setFull(a)
         if (kindOf(a) === 'video') setVariant(bestVersion(videoVersions(a))?.file || '')
-      })
-      .catch((e: Error) => live && setError(e.message))
+      } catch (e) {
+        if (live) setError(e instanceof Error ? e.message : 'FileSpin could not be reached.')
+      }
+    })()
     return () => {
       live = false
     }
@@ -96,13 +99,18 @@ export function DetailsView(props: {
   const formats = useMemo(() => (full ? imageFormats(full) : []), [full])
   const versions = useMemo(() => (full ? videoVersions(full) : []), [full])
   // The smallest web version plays fastest in the preview.
-  const previewVideo = versions.length ? [...versions].sort((x, y) => x.height - y.height)[0] : undefined
+  const previewVideo = versions.length
+    ? [...versions].sort((x, y) => x.height - y.height)[0]
+    : undefined
   const chosenFormat = formats.find((f) => f.name === variant)
   const blocked =
-    (kind === 'image' && chosenFormat && !chosenFormat.public && !props.allowPrivate) ||
-    (kind === 'video' && !props.allowPrivate && !versions.length)
+    !props.allowPrivate &&
+    ((kind === 'image' && chosenFormat !== undefined && !chosenFormat.public) ||
+      (kind === 'video' && versions.length === 0))
 
-  const metadata = Object.entries(a.data || {}).filter(([k, v]) => !k.startsWith('_') && show(v) !== '')
+  const metadata = Object.entries(a.data || {}).filter(
+    ([k, v]) => !k.startsWith('_') && show(v) !== '',
+  )
 
   return (
     <Stack gap={4}>
@@ -138,7 +146,10 @@ export function DetailsView(props: {
         />
         <Fact label="File size" value={formatBytes(a.size)} />
         <Fact label="Length" value={formatDuration(a.metadata?.duration)} />
-        <Fact label="Uploaded" value={a.upload_time ? new Date(a.upload_time).toLocaleDateString() : undefined} />
+        <Fact
+          label="Uploaded"
+          value={a.upload_time ? new Date(a.upload_time).toLocaleDateString() : undefined}
+        />
       </Grid>
 
       {!full && !error && (
@@ -169,7 +180,8 @@ export function DetailsView(props: {
           </Select>
           {chosenFormat && !chosenFormat.public && !props.allowPrivate && (
             <Text size={1} muted>
-              This format is private in FileSpin, so a website can’t show it. Make it public in FileSpin to use it.
+              This format is private in FileSpin, so a website can’t show it. Make it public in
+              FileSpin to use it.
             </Text>
           )}
         </Stack>
@@ -228,7 +240,7 @@ export function DetailsView(props: {
         <Button
           tone="primary"
           text={props.busy ? 'Adding…' : props.pickLabel}
-          disabled={!full || props.busy || !!blocked}
+          disabled={!full || props.busy || blocked}
           onClick={() => full && props.onPick(full, variant === 'original' ? '' : variant)}
         />
       </Flex>

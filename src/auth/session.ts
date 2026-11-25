@@ -24,10 +24,26 @@ export interface Session {
 
 type Listener = (s: Session | null) => void
 
+function isSession(x: unknown): x is Session {
+  return (
+    typeof x === 'object' &&
+    x !== null &&
+    'host' in x &&
+    typeof x.host === 'string' &&
+    'accessToken' in x &&
+    typeof x.accessToken === 'string' &&
+    'refreshToken' in x &&
+    typeof x.refreshToken === 'string' &&
+    'expiresAt' in x &&
+    typeof x.expiresAt === 'number'
+  )
+}
+
 function read(key: string): Session | null {
   try {
     const raw = window.localStorage.getItem(key)
-    return raw ? (JSON.parse(raw) as Session) : null
+    const parsed: unknown = raw ? JSON.parse(raw) : null
+    return isSession(parsed) ? parsed : null
   } catch {
     return null
   }
@@ -147,7 +163,11 @@ export class SessionStore {
 const stores = new Map<string, SessionStore>()
 
 /** One store per FileSpin + Sanity project + Sanity user, shared by every field. */
-export function sessionStore(config: ResolvedConfig, projectId: string, userId: string): SessionStore {
+export function sessionStore(
+  config: ResolvedConfig,
+  projectId: string,
+  userId: string,
+): SessionStore {
   const key = `filespin:session:${config.apiBase}:${projectId}:${userId}`
   let s = stores.get(key)
   if (!s) {

@@ -41,7 +41,9 @@ export const MAX_HEIGHT = 1536
 
 /** @public */
 export type FileSpinAssetRef = Pick<FileSpinAssetValue, 'assetId' | 'cdn' | 'kind'> &
-  Partial<Pick<FileSpinAssetValue, 'variant' | 'version' | 'width' | 'height' | 'url' | 'posterUrl'>>
+  Partial<
+    Pick<FileSpinAssetValue, 'variant' | 'version' | 'width' | 'height' | 'url' | 'posterUrl'>
+  >
 
 const clamp = (n: number | undefined, max: number) =>
   n && n > 0 ? Math.min(Math.round(n), max) : 0
@@ -59,7 +61,9 @@ export function odiUrl(
   const query = Object.entries(params)
     .filter(([, v]) => v !== undefined && v !== '')
     // Commas stay literal: resize=W,H and crop=W,H,align.
-    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v)).replace(/%2C/g, ',')}`)
+    .map(
+      ([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v)).replace(/%2C/g, ',')}`,
+    )
     .join('&')
   return query ? `${base}?${query}` : base
 }
@@ -113,7 +117,11 @@ export function filespinSrcSet(
  */
 export function filespinVideoUrl(asset: FileSpinAssetRef, version?: string): string {
   if (!version && asset.url) return asset.url
-  const file = version ? (version.endsWith('.mp4') ? version : `${version}.mp4`) : asset.variant || ''
+  const file = version
+    ? version.endsWith('.mp4')
+      ? version
+      : `${version}.mp4`
+    : asset.variant || ''
   return transcodeUrl(asset.cdn, asset.assetId, file)
 }
 

@@ -8,13 +8,17 @@
  *    key's file name is a 404 on the CDN).
  */
 
-import {ODI_MAX_H, ODI_MAX_W, THUMBNAIL_SIZE, type ResolvedConfig} from '../config'
 import type {FileSpinAsset} from '../api/types'
+import {ODI_MAX_H, ODI_MAX_W, THUMBNAIL_SIZE, type ResolvedConfig} from '../config'
 import type {FileSpinAssetValue} from '../types'
 import {odiUrl, transcodeUrl} from '../url'
 
 export const kindOf = (a: Pick<FileSpinAsset, 'content_type'>): 'image' | 'video' | 'other' =>
-  a.content_type?.startsWith('image/') ? 'image' : a.content_type?.startsWith('video/') ? 'video' : 'other'
+  a.content_type?.startsWith('image/')
+    ? 'image'
+    : a.content_type?.startsWith('video/')
+      ? 'video'
+      : 'other'
 
 /** On-demand image version, so a replaced file gets new URLs. */
 export function odiVersion(a: FileSpinAsset): number | undefined {
@@ -23,7 +27,11 @@ export function odiVersion(a: FileSpinAsset): number | undefined {
 }
 
 /** Same size everywhere in the panel, so the browser reuses it. */
-export function thumbnailUrl(config: ResolvedConfig, a: FileSpinAsset, size = THUMBNAIL_SIZE): string {
+export function thumbnailUrl(
+  config: ResolvedConfig,
+  a: FileSpinAsset,
+  size = THUMBNAIL_SIZE,
+): string {
   return odiUrl(config.cdnBase, a.id, {
     resize: `${size},${size}`,
     v: odiVersion(a) || (a.update_time ? Date.parse(a.update_time) / 1000 || undefined : undefined),
@@ -48,7 +56,9 @@ export interface ImageFormat {
 /** An image's formats, as the dashboard's Formats tab lists them. */
 export function imageFormats(a: FileSpinAsset): ImageFormat[] {
   return Object.entries(a.conversions || {})
-    .filter(([name, c]) => /^[a-z0-9_-]+$/i.test(name) && (c?.content_type || '').startsWith('image/'))
+    .filter(
+      ([name, c]) => /^[a-z0-9_-]+$/i.test(name) && (c?.content_type || '').startsWith('image/'),
+    )
     .map(([name, c]) => ({
       name,
       width: c.width || 0,
@@ -127,10 +137,20 @@ export function toValue(
     const format = variant ? imageFormats(a).find((f) => f.name === variant) : undefined
     if (variant && !format) return {error: 'That format no longer exists in FileSpin.'}
     if (format && !format.public) {
-      return {error: 'This format is private in FileSpin, so a website can’t show it. Make it public in FileSpin first.'}
+      return {
+        error:
+          'This format is private in FileSpin, so a website can’t show it. Make it public in FileSpin first.',
+      }
     }
-    const [w, h] = format ? fitDims(format.width, format.height) : fitDims(a.metadata?.width, a.metadata?.height)
-    const url = odiUrl(config.cdnBase, a.id, {resize: `${w || ODI_MAX_W},${h || ODI_MAX_H}`, v: version}, variant || undefined)
+    const [w, h] = format
+      ? fitDims(format.width, format.height)
+      : fitDims(a.metadata?.width, a.metadata?.height)
+    const url = odiUrl(
+      config.cdnBase,
+      a.id,
+      {resize: `${w || ODI_MAX_W},${h || ODI_MAX_H}`, v: version},
+      variant || undefined,
+    )
     return {
       ...base,
       kind,
@@ -184,7 +204,10 @@ export function formatDuration(s?: number): string {
 /** "image/svg+xml" -> "SVG" */
 export function typeLabel(contentType?: string): string {
   const sub = (contentType || '').split('/')[1] || ''
-  return sub.replace(/\+xml$/, '').replace(/^x-/, '').toUpperCase()
+  return sub
+    .replace(/\+xml$/, '')
+    .replace(/^x-/, '')
+    .toUpperCase()
 }
 
 export function dashboardAssetUrl(config: ResolvedConfig, assetId: string) {

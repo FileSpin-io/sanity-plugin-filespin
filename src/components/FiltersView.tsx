@@ -1,6 +1,18 @@
-import {useEffect, useState} from 'react'
-import {Box, Button, Card, Checkbox, Flex, Select, Spinner, Stack, Text, TextInput} from '@sanity/ui'
 import {ArrowLeftIcon} from '@sanity/icons/ArrowLeft'
+import {
+  Box,
+  Button,
+  Card,
+  Checkbox,
+  Flex,
+  Select,
+  Spinner,
+  Stack,
+  Text,
+  TextInput,
+} from '@sanity/ui'
+import {useEffect, useState} from 'react'
+
 import type {SchemaSummary} from '../api/types'
 import {
   NO_FILTERS,
@@ -39,7 +51,10 @@ function SchemaField({
   if (field.widget === 'select') {
     return (
       <Field label={field.label}>
-        <Select value={(value as string) || ''} onChange={(e) => onChange(e.currentTarget.value)}>
+        <Select
+          value={typeof value === 'string' ? value : ''}
+          onChange={(e) => onChange(e.currentTarget.value)}
+        >
           <option value="">Any</option>
           {field.options.map((o) => (
             <option key={o} value={o}>
@@ -74,7 +89,7 @@ function SchemaField({
     <Field label={field.label}>
       <TextInput
         type={field.widget === 'date' ? 'date' : 'text'}
-        value={(value as string) || ''}
+        value={typeof value === 'string' ? value : ''}
         onChange={(e) => onChange(e.currentTarget.value)}
       />
     </Field>
@@ -94,7 +109,10 @@ export function FiltersView(props: {
   useEffect(() => {
     let live = true
     if (!schemaCache) schemaCache = client.schemas().catch(() => ((schemaCache = null), []))
-    schemaCache.then((s) => live && setSchemas(s))
+    void schemaCache.then((s) => {
+      if (live) setSchemas(s)
+      return s
+    })
     return () => {
       live = false
     }
@@ -151,14 +169,22 @@ export function FiltersView(props: {
               />
             </Box>
             <Box flex={1}>
-              <TextInput type="date" aria-label="To" value={f.to || ''} onChange={(e) => set({to: e.currentTarget.value})} />
+              <TextInput
+                type="date"
+                aria-label="To"
+                value={f.to || ''}
+                onChange={(e) => set({to: e.currentTarget.value})}
+              />
             </Box>
           </Flex>
         )}
       </Field>
 
       <Flex as="label" align="center" gap={2}>
-        <Checkbox checked={f.generatedOnly} onChange={(e) => set({generatedOnly: e.currentTarget.checked})} />
+        <Checkbox
+          checked={f.generatedOnly}
+          onChange={(e) => set({generatedOnly: e.currentTarget.checked})}
+        />
         <Text size={1}>Show only generated assets</Text>
       </Flex>
 
@@ -205,7 +231,11 @@ export function FiltersView(props: {
 
       <Flex gap={2} justify="flex-end">
         <Button mode="ghost" text="Clear all" onClick={() => setF(NO_FILTERS)} />
-        <Button tone="primary" text="Show results" onClick={() => props.onApply(f, schemas || [])} />
+        <Button
+          tone="primary"
+          text="Show results"
+          onClick={() => props.onApply(f, schemas || [])}
+        />
       </Flex>
     </Stack>
   )

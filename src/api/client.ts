@@ -7,8 +7,8 @@
  * Origin, so CORS allows any Studio address.
  */
 
-import {LISTED_TYPES, type ResolvedConfig} from '../config'
 import type {SessionStore} from '../auth/session'
+import {LISTED_TYPES, type ResolvedConfig} from '../config'
 import type {AssetFilters, FileSpinAsset, FileSpinCollection, Page, SchemaSummary} from './types'
 
 /** The login is gone: no token, or the refresh was refused. */
@@ -80,10 +80,9 @@ export class FileSpinClient {
     const send = async (token: string | null) => {
       if (!token) throw new NotAuthorizedError('not signed in')
       try {
-        return await fetch(this.url(path), {
-          ...init,
-          headers: {...(init.headers as Record<string, string>), Authorization: `Bearer ${token}`},
-        })
+        const headers = new Headers(init.headers)
+        headers.set('Authorization', `Bearer ${token}`)
+        return await fetch(this.url(path), {...init, headers})
       } catch {
         throw new ApiError('FileSpin can’t be reached. Check your connection.', 0)
       }
@@ -131,7 +130,9 @@ export class FileSpinClient {
     const f = opts.filters || {}
     const body: Record<string, unknown> = {
       keyword: opts.keyword || '',
-      content_type: (f.contentTypes?.length ? f.contentTypes : opts.types || LISTED_TYPES).join(' OR '),
+      content_type: (f.contentTypes?.length ? f.contentTypes : opts.types || LISTED_TYPES).join(
+        ' OR ',
+      ),
       status: 'OK',
       limit_per_page: PAGE_SIZE,
       extended_result: true,
@@ -230,7 +231,8 @@ export class FileSpinClient {
       `/api/v1/assets/${id}/get_link?key=${encodeURIComponent(key)}&delivery=download&expiry=3600&cdn=default`,
     )
     const link = (await res.text()).trim()
-    if (!/^https:\/\//.test(link)) throw new ApiError('FileSpin returned no link for this file.', res.status)
+    if (!link.startsWith('https://'))
+      throw new ApiError('FileSpin returned no link for this file.', res.status)
     return link
   }
 

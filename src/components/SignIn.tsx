@@ -4,13 +4,19 @@
  * screen notices by itself. No API key, no admin set-up.
  */
 
-import {useEffect, useRef, useState} from 'react'
+import {LaunchIcon} from '@sanity/icons/Launch'
 import {Box, Button, Card, Flex, Spinner, Stack, Text} from '@sanity/ui'
 import {Code} from '@sanity/ui/code'
-import {LaunchIcon} from '@sanity/icons/Launch'
-import {useFileSpin} from './FileSpinProvider'
+import {useEffect, useRef, useState} from 'react'
+
+import {
+  requestDeviceCode,
+  SignInError,
+  waitForApproval,
+  type DeviceAuthorization,
+} from '../auth/deviceFlow'
 import {FileSpinIcon} from './FileSpinIcon'
-import {requestDeviceCode, SignInError, waitForApproval, type DeviceAuthorization} from '../auth/deviceFlow'
+import {useFileSpin} from './FileSpinProvider'
 
 export function SignIn() {
   const {config, store} = useFileSpin()
@@ -68,8 +74,8 @@ export function SignIn() {
                 Add images and videos from FileSpin
               </Text>
               <Text size={1} muted>
-                Sign in with your FileSpin account. You see what your account can see in FileSpin, and files stay
-                in FileSpin.
+                Sign in with your FileSpin account. You see what your account can see in FileSpin,
+                and files stay in FileSpin.
               </Text>
             </Stack>
             {error && (

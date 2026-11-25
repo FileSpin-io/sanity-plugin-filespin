@@ -4,8 +4,8 @@
  * whose searchable fields then appear below it.
  */
 
-import {IMAGE_TYPES} from '../config'
 import type {AssetFilters, SchemaProperty, SchemaSummary} from '../api/types'
+import {IMAGE_TYPES} from '../config'
 
 export interface Filters {
   fileName: string
@@ -21,7 +21,13 @@ export interface Filters {
   fields: Record<string, string | string[]>
 }
 
-export const NO_FILTERS: Filters = {fileName: '', kind: '', generatedOnly: false, uploaded: '', fields: {}}
+export const NO_FILTERS: Filters = {
+  fileName: '',
+  kind: '',
+  generatedOnly: false,
+  uploaded: '',
+  fields: {},
+}
 
 /** One choice at a time, like the dashboard. Each image format is its own choice. */
 export const KIND_OPTIONS = [
@@ -71,8 +77,10 @@ export interface SearchField {
 export function localised(value: unknown): string {
   if (!value) return ''
   if (typeof value === 'string') return value
-  const map = value as Record<string, string>
-  return map.en || Object.values(map)[0] || ''
+  if (typeof value !== 'object') return ''
+  if ('en' in value && typeof value.en === 'string') return value.en
+  const first = Object.values(value).find((v) => typeof v === 'string')
+  return typeof first === 'string' ? first : ''
 }
 
 /** "in_review" -> "In review" */
@@ -107,7 +115,9 @@ const day = (iso: string, endOfDay: boolean) => `${iso}T${endOfDay ? '23:59:59' 
 
 /** How many filters are on, for the Filters button. */
 export function activeCount(f: Filters): number {
-  const fields = Object.values(f.fields).filter((v) => (Array.isArray(v) ? v.length : v.trim())).length
+  const fields = Object.values(f.fields).filter((v) =>
+    Array.isArray(v) ? v.length : v.trim(),
+  ).length
   return (
     (f.fileName.trim() ? 1 : 0) +
     (f.kind ? 1 : 0) +
@@ -119,7 +129,11 @@ export function activeCount(f: Filters): number {
 }
 
 /** The screen's choices -> the search API's terms. `only` keeps a locked field's kind. */
-export function toAssetFilters(f: Filters, schemas: SchemaSummary[], only?: 'image' | 'video'): AssetFilters {
+export function toAssetFilters(
+  f: Filters,
+  schemas: SchemaSummary[],
+  only?: 'image' | 'video',
+): AssetFilters {
   const out: AssetFilters = {}
   if (f.fileName.trim()) out.fileName = f.fileName.trim()
   if (f.kind === 'image') out.contentTypes = [...IMAGE_TYPES]

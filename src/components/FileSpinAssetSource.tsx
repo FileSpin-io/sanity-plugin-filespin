@@ -7,11 +7,12 @@
  * image fields and Sanity's image pipeline (hotspot, crop) is wanted.
  */
 
+import {Box, Dialog, Flex, Text} from '@sanity/ui'
 import {useCallback} from 'react'
 import type {AssetFromSource, AssetSourceComponentProps} from 'sanity'
-import {Box, Dialog, Flex, Text} from '@sanity/ui'
-import type {ResolvedConfig} from '../config'
+
 import type {FileSpinAsset} from '../api/types'
+import type {ResolvedConfig} from '../config'
 import {dashboardAssetUrl, kindOf} from '../lib/media'
 import {Browser, type Only} from './Browser'
 import {FileSpinIcon} from './FileSpinIcon'
@@ -21,8 +22,11 @@ export const ASSET_SOURCE_NAME = 'filespin'
 
 /** "image/*" -> images only; "video/*" -> videos only; anything else -> both. */
 function onlyFor(accept: string, assetType?: string): Only {
-  if (assetType === 'image' || /^image\//.test(accept)) return 'image'
-  const types = accept.split(',').map((t) => t.trim()).filter(Boolean)
+  if (assetType === 'image' || accept.startsWith('image/')) return 'image'
+  const types = accept
+    .split(',')
+    .map((t) => t.trim())
+    .filter(Boolean)
   if (types.length && types.every((t) => t.startsWith('video/'))) return 'video'
   return undefined
 }
@@ -35,13 +39,16 @@ function Source(props: AssetSourceComponentProps) {
   const onPick = useCallback(
     async (a: FileSpinAsset, variant: string) => {
       const kind = kindOf(a)
-      if (only && kind !== only) throw new Error(`Choose ${only === 'image' ? 'an image' : 'a video'} here.`)
+      if (only && kind !== only)
+        throw new Error(`Choose ${only === 'image' ? 'an image' : 'a video'} here.`)
       // A video version is chosen by file ("720p-video.mp4"); its link key is the name.
       const key = variant ? variant.replace(/\.mp4$/, '') : 'original'
       const link = await client.fileLink(a.id, key)
       const asset: AssetFromSource = {
         kind: 'url',
         value: link,
+        // Sanity reads only these fields; its type describes a whole asset document.
+        // oxlint-disable-next-line typescript/no-unsafe-type-assertion
         assetDocumentProps: {
           originalFilename: a.name,
           source: {
@@ -63,7 +70,9 @@ function Source(props: AssetSourceComponentProps) {
       header={
         <Flex align="center" gap={2}>
           <FileSpinIcon />
-          <span>{typeof dialogHeaderTitle === 'string' ? dialogHeaderTitle : 'Select from FileSpin'}</span>
+          <span>
+            {typeof dialogHeaderTitle === 'string' ? dialogHeaderTitle : 'Select from FileSpin'}
+          </span>
         </Flex>
       }
       width={3}
@@ -73,8 +82,8 @@ function Source(props: AssetSourceComponentProps) {
       <Box padding={4}>
         <Box marginBottom={4}>
           <Text size={1} muted>
-            A copy of the file is saved in Sanity. To keep files in FileSpin and serve them from the FileSpin CDN,
-            use a FileSpin asset field instead.
+            A copy of the file is saved in Sanity. To keep files in FileSpin and serve them from the
+            FileSpin CDN, use a FileSpin asset field instead.
           </Text>
         </Box>
         <Browser only={only} allowPrivate pickLabel="Copy into Sanity" onPick={onPick} />

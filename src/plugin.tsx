@@ -1,7 +1,8 @@
-import {definePlugin, type AssetSource} from 'sanity'
-import {resolveConfig, type FileSpinPluginConfig} from './config'
+import {defineLocaleResourceBundle, definePlugin, type AssetSource} from 'sanity'
+
 import {ASSET_SOURCE_NAME, makeAssetSourceComponent} from './components/FileSpinAssetSource'
 import {FileSpinIcon} from './components/FileSpinIcon'
+import {resolveConfig, type FileSpinPluginConfig} from './config'
 import {filespinAssetType} from './schema/filespinAsset'
 
 /**
@@ -27,12 +28,22 @@ export const filespin = definePlugin<FileSpinPluginConfig | void>((options) => {
   const config = resolveConfig(options || {})
   const source: AssetSource = {
     name: ASSET_SOURCE_NAME,
-    title: 'FileSpin',
+    // Studio looks this up in its own ("studio") namespace; the bundle below adds it.
+    i18nKey: 'filespin.asset-source.title',
     icon: FileSpinIcon,
     component: makeAssetSourceComponent(config),
   }
   return {
     name: 'sanity-plugin-filespin',
+    i18n: {
+      bundles: [
+        defineLocaleResourceBundle({
+          locale: 'en-US',
+          namespace: 'studio',
+          resources: {'filespin.asset-source.title': 'FileSpin'},
+        }),
+      ],
+    },
     schema: {types: [filespinAssetType(config)]},
     form: config.assetSource
       ? {

@@ -1,8 +1,9 @@
-import {Box, Flex, Stack, Text} from '@sanity/ui'
 import {PlayIcon} from '@sanity/icons/Play'
+import {Box, Flex, Stack, Text} from '@sanity/ui'
 import {styled} from 'styled-components'
-import type {FileSpinAssetValue} from '../types'
+
 import {formatBytes, formatDuration, typeLabel} from '../lib/media'
+import type {FileSpinAssetValue} from '../types'
 import {filespinImageUrl} from '../url'
 
 const Media = styled.div<{$size: number}>`

@@ -42,7 +42,11 @@ const SAAS = 'https://app.filespin.io'
 const CLIENT_ID = '5a077d70b1e446fbae39df70e83f6234'
 
 const KNOWN: Record<string, Known> = {
-  [SAAS]: {cdn: 'https://cdn.filespin.io', clientId: CLIENT_ID, dashboard: 'https://dashboard.filespin.io'},
+  [SAAS]: {
+    cdn: 'https://cdn.filespin.io',
+    clientId: CLIENT_ID,
+    dashboard: 'https://dashboard.filespin.io',
+  },
   'https://appdev.filespin.io': {
     cdn: 'https://devcdn.filespin.io',
     clientId: CLIENT_ID,

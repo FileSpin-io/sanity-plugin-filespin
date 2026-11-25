@@ -4,11 +4,19 @@
  * the Studio is signed in once the editor signs in on any of them.
  */
 
-import {createContext, useContext, useEffect, useMemo, useState, type ReactNode} from 'react'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useSyncExternalStore,
+  type ReactNode,
+} from 'react'
 import {useCurrentUser, useProjectId} from 'sanity'
-import type {ResolvedConfig} from '../config'
-import {sessionStore, type Session, type SessionStore} from '../auth/session'
+
 import {FileSpinClient} from '../api/client'
+import {sessionStore, type Session, type SessionStore} from '../auth/session'
+import type {ResolvedConfig} from '../config'
 
 interface FileSpinContextValue {
   config: ResolvedConfig
@@ -19,28 +27,34 @@ interface FileSpinContextValue {
 
 const Ctx = createContext<FileSpinContextValue | null>(null)
 
-export function FileSpinProvider({config, children}: {config: ResolvedConfig; children: ReactNode}) {
+export function FileSpinProvider({
+  config,
+  children,
+}: {
+  config: ResolvedConfig
+  children: ReactNode
+}) {
   const projectId = useProjectId()
   const user = useCurrentUser()
-  const store = useMemo(() => sessionStore(config, projectId, user?.id || 'anonymous'), [config, projectId, user?.id])
+  const store = useMemo(
+    () => sessionStore(config, projectId, user?.id || 'anonymous'),
+    [config, projectId, user?.id],
+  )
   const client = useMemo(() => new FileSpinClient(config, store), [config, store])
-  const [session, setSession] = useState<Session | null>(() => store.get())
-
-  useEffect(() => {
-    setSession(store.get())
-    return store.subscribe(setSession)
-  }, [store])
+  const session = useSyncExternalStore(
+    (onChange) => store.subscribe(onChange),
+    () => store.get(),
+  )
 
   // Fill in the account line once per login.
   useEffect(() => {
-    if (!session || session.email) return
     let live = true
-    client
-      .userinfo()
-      .then((u) => {
-        if (live && u.email) store.setEmail(u.email)
-      })
-      .catch(() => undefined)
+    if (session && !session.email) {
+      void (async () => {
+        const u = await client.userinfo().catch(() => null)
+        if (live && u?.email) store.setEmail(u.email)
+      })()
+    }
     return () => {
       live = false
     }

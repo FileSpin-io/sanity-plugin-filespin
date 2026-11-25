@@ -10,9 +10,6 @@
  * image and file pickers. The host decides what "add" means (onPick).
  */
 
-import {useMemo, useState, type ReactNode} from 'react'
-import {Box, Button, Card, Flex, Select, Spinner, Stack, Tab, TabList, Text, TextInput} from '@sanity/ui'
-import {Menu, MenuButton, MenuDivider, MenuItem} from '@sanity/ui/menu'
 import {ArrowLeftIcon} from '@sanity/icons/ArrowLeft'
 import {ChevronRightIcon} from '@sanity/icons/ChevronRight'
 import {EllipsisHorizontalIcon} from '@sanity/icons/EllipsisHorizontal'
@@ -21,7 +18,23 @@ import {FolderIcon} from '@sanity/icons/Folder'
 import {LaunchIcon} from '@sanity/icons/Launch'
 import {LeaveIcon} from '@sanity/icons/Leave'
 import {SearchIcon} from '@sanity/icons/Search'
+import {
+  Box,
+  Button,
+  Card,
+  Flex,
+  Select,
+  Spinner,
+  Stack,
+  Tab,
+  TabList,
+  Text,
+  TextInput,
+} from '@sanity/ui'
+import {Menu, MenuButton, MenuDivider, MenuItem} from '@sanity/ui/menu'
+import {useMemo, useState, type ReactNode} from 'react'
 import {styled} from 'styled-components'
+
 import {ForbiddenError, NotAuthorizedError} from '../api/client'
 import type {FileSpinAsset, FileSpinCollection, SchemaSummary} from '../api/types'
 import {IMAGE_TYPES, LISTED_TYPES} from '../config'
@@ -29,8 +42,8 @@ import {NO_FILTERS, SORT_OPTIONS, activeCount, toAssetFilters, type Filters} fro
 import {odiUrl} from '../url'
 import {AssetGrid} from './AssetGrid'
 import {DetailsView} from './DetailsView'
-import {useFileSpin} from './FileSpinProvider'
 import {FileSpinIcon} from './FileSpinIcon'
+import {useFileSpin} from './FileSpinProvider'
 import {FiltersView} from './FiltersView'
 import {SignIn} from './SignIn'
 import {clearPageCache, useDebounced, usePaged} from './usePaged'
@@ -49,7 +62,8 @@ export interface BrowserProps {
   onPick: (asset: FileSpinAsset, variant: string) => Promise<void>
 }
 
-const typesFor = (only: Only) => (only === 'image' ? IMAGE_TYPES : only === 'video' ? ['video*'] : LISTED_TYPES)
+const typesFor = (only: Only) =>
+  only === 'image' ? IMAGE_TYPES : only === 'video' ? ['video*'] : LISTED_TYPES
 const kindsFor = (only: Only): ('image' | 'video')[] => (only ? [only] : ['image', 'video'])
 
 function Results(props: {
@@ -146,7 +160,11 @@ function AssetsTab(props: {
         {count > 0 && <Button mode="bleed" text="Clear" onClick={props.clearFilters} />}
         <Box flex={1} />
         <Box style={{minWidth: 140}}>
-          <Select aria-label="Sort by" value={sort} onChange={(e) => props.setSort(e.currentTarget.value)}>
+          <Select
+            aria-label="Sort by"
+            value={sort}
+            onChange={(e) => props.setSort(e.currentTarget.value)}
+          >
             {SORT_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
                 {o.label}
@@ -173,7 +191,8 @@ function AssetsTab(props: {
 }
 
 const CollectionRow = styled(Card)`
-  cursor: pointer;
+  width: 100%;
+  text-align: left;
 `
 
 const Cover = styled.div`
@@ -197,8 +216,9 @@ function CollectionList({onOpen}: {onOpen: (c: FileSpinCollection) => void}) {
   const {client, config, session} = useFileSpin()
   const [typed, setTyped] = useState('')
   const keyword = useDebounced(typed.trim())
-  const list = usePaged<FileSpinCollection>(JSON.stringify(['collections', session?.email, keyword]), (page) =>
-    client.collections({keyword, page}),
+  const list = usePaged<FileSpinCollection>(
+    JSON.stringify(['collections', session?.email, keyword]),
+    (page) => client.collections({keyword, page}),
   )
   return (
     <Stack gap={3}>
@@ -219,15 +239,18 @@ function CollectionList({onOpen}: {onOpen: (c: FileSpinCollection) => void}) {
               padding={2}
               radius={2}
               border
-              tabIndex={0}
-              role="button"
+              as="button"
+              type="button"
               onClick={() => onOpen(c)}
-              onKeyDown={(e: React.KeyboardEvent) => e.key === 'Enter' && onOpen(c)}
             >
               <Flex align="center" gap={3}>
                 <Cover>
                   {c.assets?.[0] ? (
-                    <img src={odiUrl(config.cdnBase, c.assets[0], {resize: '240,240'})} alt="" loading="lazy" />
+                    <img
+                      src={odiUrl(config.cdnBase, c.assets[0], {resize: '240,240'})}
+                      alt=""
+                      loading="lazy"
+                    />
                   ) : (
                     <Text muted>
                       <FolderIcon />
@@ -239,7 +262,8 @@ function CollectionList({onOpen}: {onOpen: (c: FileSpinCollection) => void}) {
                     {c.name}
                   </Text>
                   <Text size={0} muted>
-                    {(c.assets?.length || 0).toLocaleString()} {c.assets?.length === 1 ? 'asset' : 'assets'}
+                    {(c.assets?.length || 0).toLocaleString()}{' '}
+                    {c.assets?.length === 1 ? 'asset' : 'assets'}
                   </Text>
                 </Stack>
                 <Text muted>
@@ -287,7 +311,11 @@ function CollectionAssets(props: {
         clearButton={!!typed}
         onClear={() => setTyped('')}
       />
-      <Results list={list} noun={['item', 'items']} emptyText="Nothing here that this field can use.">
+      <Results
+        list={list}
+        noun={['item', 'items']}
+        emptyText="Nothing here that this field can use."
+      >
         {props.grid(list.items)}
       </Results>
     </Stack>
@@ -300,7 +328,14 @@ export function Browser(props: BrowserProps) {
   return <SignedInBrowser {...props} />
 }
 
-function SignedInBrowser({only, allowPrivate = false, pickLabel, selectedId, startWith, onPick}: BrowserProps) {
+function SignedInBrowser({
+  only,
+  allowPrivate = false,
+  pickLabel,
+  selectedId,
+  startWith,
+  onPick,
+}: BrowserProps) {
   const {config, store, session} = useFileSpin()
   const [tab, setTab] = useState<'assets' | 'collections'>('assets')
   const [typed, setTyped] = useState('')
@@ -335,7 +370,13 @@ function SignedInBrowser({only, allowPrivate = false, pickLabel, selectedId, sta
   }
 
   const grid = (items: FileSpinAsset[]) => (
-    <AssetGrid items={items} busyId={busyId} selectedId={selectedId} onPick={(a) => pick(a)} onDetails={setDetails} />
+    <AssetGrid
+      items={items}
+      busyId={busyId}
+      selectedId={selectedId}
+      onPick={(a) => pick(a)}
+      onDetails={setDetails}
+    />
   )
 
   const signOut = async () => {
@@ -348,7 +389,12 @@ function SignedInBrowser({only, allowPrivate = false, pickLabel, selectedId, sta
   const list =
     tab === 'collections' ? (
       collection ? (
-        <CollectionAssets collection={collection} only={only} onBack={() => setCollection(null)} grid={grid} />
+        <CollectionAssets
+          collection={collection}
+          only={only}
+          onBack={() => setCollection(null)}
+          grid={grid}
+        />
       ) : (
         <CollectionList onOpen={setCollection} />
       )
@@ -369,6 +415,7 @@ function SignedInBrowser({only, allowPrivate = false, pickLabel, selectedId, sta
     )
   const overlay = details ? (
     <DetailsView
+      key={details.id}
       asset={details}
       allowPrivate={allowPrivate}
       busy={busyId === details.id}
@@ -419,7 +466,9 @@ function SignedInBrowser({only, allowPrivate = false, pickLabel, selectedId, sta
         <Box flex={1} />
         <MenuButton
           id="filespin-account-menu"
-          button={<Button mode="bleed" icon={EllipsisHorizontalIcon} aria-label="FileSpin account" />}
+          button={
+            <Button mode="bleed" icon={EllipsisHorizontalIcon} aria-label="FileSpin account" />
+          }
           popover={{portal: true, placement: 'bottom-end'}}
           menu={
             <Menu>
@@ -442,7 +491,12 @@ function SignedInBrowser({only, allowPrivate = false, pickLabel, selectedId, sta
                 target="_blank"
                 rel="noopener noreferrer"
               />
-              <MenuItem icon={LeaveIcon} text="Sign out of FileSpin" tone="critical" onClick={signOut} />
+              <MenuItem
+                icon={LeaveIcon}
+                text="Sign out of FileSpin"
+                tone="critical"
+                onClick={signOut}
+              />
             </Menu>
           }
         />
