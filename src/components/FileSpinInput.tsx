@@ -60,7 +60,13 @@ function Input(props: ObjectInputProps) {
   const value = isAssetValue(props.value) ? props.value : undefined
   const {client, config} = useFileSpin()
   const toast = useToast()
-  const [open, setOpen] = useState<null | 'choose' | 'version'>(null)
+  // A new, empty list item (Sanity opens it in its own window) goes straight to
+  // the picker, so adding to a gallery is one click, not two.
+  const last = props.path[props.path.length - 1]
+  const newListItem = !value && typeof last === 'object' && last !== null && '_key' in last
+  const [open, setOpen] = useState<null | 'choose' | 'version'>(() =>
+    newListItem && !readOnly ? 'choose' : null,
+  )
   const only = acceptOf(schemaType.options)
 
   const onPick = async (a: FileSpinAsset, variant: string) => {

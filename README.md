@@ -160,7 +160,7 @@ for these.
 ## Privacy and security
 
 - Sign-in uses FileSpin's OAuth2 device flow. A FileSpin tab opens, the editor
-  signs in there and presses **Allow**. The Studio never sees their password.
+  signs in there and presses **Authorize**. The Studio never sees their password.
 - The login is kept in the editor's browser (localStorage), per Sanity project
   and user. It is never written to your Sanity dataset or exports. **Sign out
   of FileSpin** in the panel's menu removes it and revokes it at FileSpin.

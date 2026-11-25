@@ -133,7 +133,7 @@ export function FiltersView(props: {
       <Field label="File name">
         <TextInput
           value={f.fileName}
-          placeholder="e.g. banner*"
+          placeholder="e.g. banner"
           onChange={(e) => set({fileName: e.currentTarget.value})}
         />
       </Field>

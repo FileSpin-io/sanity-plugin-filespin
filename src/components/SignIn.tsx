@@ -1,6 +1,6 @@
 /**
  * Sign in with FileSpin: a new tab opens FileSpin's approval page with a short
- * code filled in; the editor signs in there and presses Allow, and this
+ * code filled in; the editor signs in there and presses Authorize, and this
  * screen notices by itself. No API key, no admin set-up.
  */
 
@@ -103,7 +103,7 @@ export function SignIn() {
                 Finish signing in on the FileSpin tab
               </Text>
               <Text size={1} muted>
-                Sign in there and press Allow. Check that the page shows this code:
+                Sign in there if asked, then press Authorize. Check that the page shows this code:
               </Text>
             </Stack>
             <Card padding={3} radius={2} tone="primary" border>
