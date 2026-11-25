@@ -1,28 +1,7 @@
-import {definePlugin} from 'sanity'
-
-interface MyPluginConfig {
-  /* nothing here yet */
-}
-
-/**
- * Usage in `sanity.config.ts` (or .js)
- *
- * ```ts
- * import {defineConfig} from 'sanity'
- * import {myPlugin} from 'sanity-plugin-filespin'
- *
- * export default defineConfig({
- *   // ...
- *   plugins: [myPlugin()],
- * })
- * ```
- *
- * @public
- */
-export const myPlugin = definePlugin<MyPluginConfig | void>((_config = {}) => {
-  // oxlint-disable-next-line no-console
-  console.log('hello from sanity-plugin-filespin')
-  return {
-    name: 'sanity-plugin-filespin',
-  }
-})
+export {filespin} from './plugin'
+export type {FileSpinPluginConfig} from './config'
+export type {FileSpinAssetValue} from './types'
+export type {FileSpinAssetOptions} from './components/FileSpinInput'
+export {FileSpinIcon} from './components/FileSpinIcon'
+export {filespinImageUrl, filespinSrcSet, filespinVideoUrl} from './url'
+export type {CropAlign, FileSpinAssetRef, ImageUrlOptions} from './url'
