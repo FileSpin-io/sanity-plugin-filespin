@@ -5,6 +5,10 @@ Sanity Studio. Editors search FileSpin, filter by type, date or metadata, browse
 collections, and pick a file, all without leaving the document they are
 editing.
 
+![FileSpin images and a video in a Sanity document](https://raw.githubusercontent.com/FileSpin-io/sanity-plugin-filespin/main/docs/screenshots/1-filled-fields.jpg)
+
+![Searching FileSpin from Sanity Studio](https://raw.githubusercontent.com/FileSpin-io/sanity-plugin-filespin/main/docs/screenshots/2-picker-search.jpg)
+
 Two ways to use it. You can use both in the same Studio:
 
 | | **FileSpin asset field** (`filespin.asset`) | **FileSpin in Sanity's image picker** |
