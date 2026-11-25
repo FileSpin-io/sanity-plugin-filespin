@@ -58,3 +58,6 @@ yalc.lock
 
 # Compiled plugin
 dist
+test-studio/.env
+test-studio/.sanity
+test-studio/dist
