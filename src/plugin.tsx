@@ -1,3 +1,7 @@
+// Sanity UI 4's own stylesheet. A v6 Studio loads it already; a v5 Studio ships
+// Sanity UI 3 and does not, and without it UI 4 inputs draw over their field.
+// Sanity's own plugins (e.g. Cloudinary) import it the same way.
+import '@sanity/ui/styles.css'
 import {defineLocaleResourceBundle, definePlugin, type AssetSource} from 'sanity'
 
 import {ASSET_SOURCE_NAME, makeAssetSourceComponent} from './components/FileSpinAssetSource'

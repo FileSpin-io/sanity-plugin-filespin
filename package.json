@@ -23,7 +23,6 @@
   },
   "license": "MIT",
   "author": "FileSpin <support@filespin.io>",
-  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -84,5 +83,8 @@
       "./url": "./dist/url.js"
     }
   },
-  "browserslist": "extends @sanity/browserslist-config"
+  "browserslist": "extends @sanity/browserslist-config",
+  "sideEffects": [
+    "./dist/index.js"
+  ]
 }
