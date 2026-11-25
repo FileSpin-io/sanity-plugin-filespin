@@ -1,6 +1,6 @@
 # FileSpin for Sanity
 
-Use images and videos from your [FileSpin](https://www.filespin.io) library in
+Use images and videos from your [FileSpin](https://filespin.io) library in
 Sanity Studio. Editors search FileSpin, filter by type, date or metadata, browse
 collections, and pick a file, all without leaving the document they are
 editing.
@@ -170,8 +170,8 @@ for these.
   of FileSpin** in the panel's menu removes it and revokes it at FileSpin.
 - The plugin asks only for read access (`read_assets`).
 - It talks to your FileSpin host and its CDN, nothing else.
-  [Terms](https://www.filespin.io/terms-conditions) ·
-  [Privacy](https://www.filespin.io/privacy)
+  [Terms](https://filespin.io/terms-conditions) ·
+  [Privacy](https://filespin.io/privacy)
 
 ## No FileSpin account?
 
