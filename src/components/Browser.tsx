@@ -239,7 +239,7 @@ function CollectionList({onOpen}: {onOpen: (c: FileSpinCollection) => void}) {
               padding={2}
               radius={2}
               border
-              as="button"
+              forwardedAs="button"
               type="button"
               onClick={() => onOpen(c)}
             >

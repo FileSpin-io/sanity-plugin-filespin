@@ -13,12 +13,12 @@ import {Box, Button, Card, Dialog, Flex, Stack, Text, TextInput} from '@sanity/u
 import {Menu, MenuButton, MenuDivider, MenuItem} from '@sanity/ui/menu'
 import {useToast} from '@sanity/ui/toast'
 import {useState} from 'react'
-import {set, unset, type ObjectInputProps} from 'sanity'
+import {set, setIfMissing, unset, type ObjectInputProps} from 'sanity'
 
 import type {FileSpinAsset} from '../api/types'
 import type {ResolvedConfig} from '../config'
 import {dashboardAssetUrl, toValue} from '../lib/media'
-import {isAssetValue} from '../types'
+import {isAssetValue, type FileSpinAssetValue} from '../types'
 import {AssetCard} from './AssetCard'
 import {Browser, type Only} from './Browser'
 import {FileSpinIcon} from './FileSpinIcon'
@@ -29,6 +29,23 @@ export interface FileSpinAssetOptions {
   /** Offer only images or only videos. Default: both. */
   accept?: 'image' | 'video'
 }
+
+/** Everything the picker writes; `alt` is the editor's own. */
+const STORED_FIELDS = [
+  'assetId',
+  'name',
+  'kind',
+  'contentType',
+  'width',
+  'height',
+  'size',
+  'duration',
+  'variant',
+  'url',
+  'posterUrl',
+  'cdn',
+  'version',
+] as const satisfies readonly (keyof FileSpinAssetValue)[]
 
 /** The field's `options.accept`, if the schema set one. */
 function acceptOf(options: unknown): Only {
@@ -55,7 +72,13 @@ function Input(props: ObjectInputProps) {
     if (only && next.kind !== only) throw new Error(`This field takes ${only}s only.`)
     // Alt text describes the picture, so it stays only for the same asset.
     const alt = value?.assetId === next.assetId ? value.alt : undefined
-    onChange(set({...next, ...(alt ? {alt} : {})}))
+    // Field by field, never the whole object: an array item keeps its _key,
+    // and two editors changing different fields don't overwrite each other.
+    onChange([
+      setIfMissing({_type: 'filespin.asset'}),
+      ...STORED_FIELDS.map((f) => (next[f] === undefined ? unset([f]) : set(next[f], [f]))),
+      ...(alt ? [] : [unset(['alt'])]),
+    ])
     setOpen(null)
   }
 
@@ -72,7 +95,7 @@ function Input(props: ObjectInputProps) {
       onClose={() => setOpen(null)}
       onClickOutside={() => setOpen(null)}
     >
-      <Box padding={4}>
+      <Box padding={4} style={{minHeight: 'min(70vh, 640px)'}}>
         <Browser
           only={only}
           pickLabel={open === 'version' ? 'Use this version' : `Use this ${only || 'file'}`}

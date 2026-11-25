@@ -13,15 +13,7 @@ const Thumb = styled.div`
   aspect-ratio: 1;
   overflow: hidden;
   border-radius: 3px;
-  /* A checkerboard shows where an image is transparent. */
-  background-color: var(--card-bg-color);
-  background-image:
-    linear-gradient(45deg, var(--card-border-color) 25%, transparent 25%),
-    linear-gradient(-45deg, var(--card-border-color) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, var(--card-border-color) 75%),
-    linear-gradient(-45deg, transparent 75%, var(--card-border-color) 75%);
-  background-size: 16px 16px;
-  background-position:
+  background: var(--card-muted-bg-color, var(--card-bg2-color));
     0 0,
     0 8px,
     8px -8px,
@@ -83,7 +75,7 @@ export function AssetGrid(props: {
         return (
           <Tile key={a.id}>
             <PickButton
-              as="button"
+              forwardedAs="button"
               type="button"
               padding={1}
               radius={2}

@@ -53,7 +53,11 @@ export function describe(value: FileSpinAssetValue): string {
   if (value.width) parts.push(`${value.width} × ${value.height}`)
   if (value.kind === 'video') {
     if (value.duration) parts.push(formatDuration(value.duration))
-    if (value.variant) parts.push(value.variant.replace(/\.mp4$/, '').replace(/-video$/, ''))
+    if (value.variant) {
+      const name = value.variant.replace(/\.mp4$/, '')
+      const res = /^(\d+p)/.exec(name)?.[1] || name
+      parts.push(name.includes('-wm-') ? `${res}, watermarked` : res)
+    }
   } else {
     if (value.variant) parts.push(`format: ${value.variant}`)
     if (value.size) parts.push(`original ${formatBytes(value.size)}`)

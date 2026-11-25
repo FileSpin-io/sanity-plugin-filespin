@@ -79,7 +79,7 @@ function Source(props: AssetSourceComponentProps) {
       onClose={onClose}
       onClickOutside={onClose}
     >
-      <Box padding={4}>
+      <Box padding={4} style={{minHeight: 'min(70vh, 640px)'}}>
         <Box marginBottom={4}>
           <Text size={1} muted>
             A copy of the file is saved in Sanity. To keep files in FileSpin and serve them from the

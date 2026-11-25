@@ -104,8 +104,9 @@ export function filespinSrcSet(
   widths: number[] = [320, 640, 960, 1280, 1600, 2048],
   options: Omit<ImageUrlOptions, 'width' | 'height' | 'crop'> = {},
 ): string {
-  const usable = asset.width ? widths.filter((w) => w <= asset.width!) : widths
-  const list = usable.length ? usable : [Math.min(asset.width || MAX_WIDTH, MAX_WIDTH)]
+  // Never wider than the file itself, but always up to its full width.
+  const full = asset.width ? Math.min(asset.width, MAX_WIDTH) : 0
+  const list = full ? [...widths.filter((w) => w < full), full] : widths
   return list.map((w) => `${filespinImageUrl(asset, {...options, width: w})} ${w}w`).join(', ')
 }
 

@@ -61,3 +61,4 @@ dist
 test-studio/.env
 test-studio/.sanity
 test-studio/dist
+test-studio/node_modules
