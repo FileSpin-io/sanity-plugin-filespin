@@ -469,7 +469,15 @@ function SignedInBrowser({
           button={
             <Button mode="bleed" icon={EllipsisHorizontalIcon} aria-label="FileSpin account" />
           }
-          popover={{portal: true, placement: 'bottom-end'}}
+          // Measured against the page, not the nearest Sanity dialog: when this panel
+          // opens over a gallery item's own window, that window's edges would count
+          // the button as off-screen and keep the menu hidden.
+          popover={{
+            portal: true,
+            placement: 'bottom-end',
+            referenceBoundary: typeof document === 'undefined' ? null : document.body,
+            floatingBoundary: typeof document === 'undefined' ? null : document.body,
+          }}
           menu={
             <Menu>
               <Box padding={3}>

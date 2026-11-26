@@ -19,11 +19,12 @@ import {
   hasHls,
   imageFormats,
   kindOf,
+  odiVersion,
   thumbnailUrl,
   typeLabel,
   videoVersions,
 } from '../lib/media'
-import {transcodeUrl} from '../url'
+import {odiUrl, transcodeUrl} from '../url'
 import {useFileSpin} from './FileSpinProvider'
 
 const Preview = styled.div`
@@ -106,6 +107,34 @@ export function DetailsView(props: {
   const chosenFormat = formats.find((f) => f.name === variant)
   const chosenVersion = versions.find((v) => v.file === variant)
   const stream = !props.allowPrivate && full !== null && hasHls(full)
+
+  // The preview follows the choice: a format's own image, a video's chosen version.
+  // A private format (copy mode only) has no public URL, so it shows through a signed link.
+  const [privatePreview, setPrivatePreview] = useState<{name: string; url: string} | null>(null)
+  useEffect(() => {
+    if (!full || !chosenFormat || chosenFormat.public) return undefined
+    let live = true
+    client
+      .fileLink(full.id, chosenFormat.name)
+      .then((url) => live && setPrivatePreview({name: chosenFormat.name, url}))
+      .catch(() => undefined)
+    return () => {
+      live = false
+    }
+  }, [client, full, chosenFormat])
+  const previewImage = !chosenFormat
+    ? thumbnailUrl(config, a, 480)
+    : chosenFormat.public
+      ? odiUrl(
+          config.cdnBase,
+          a.id,
+          {resize: '480,480', v: full ? odiVersion(full) : undefined},
+          chosenFormat.name,
+        )
+      : privatePreview?.name === chosenFormat.name
+        ? privatePreview.url
+        : thumbnailUrl(config, a, 480)
+  const shownVideo = chosenVersion || previewVideo
   const blocked =
     !props.allowPrivate &&
     ((kind === 'image' && chosenFormat !== undefined && !chosenFormat.public) ||
@@ -127,9 +156,10 @@ export function DetailsView(props: {
       </Flex>
 
       <Preview>
-        {kind === 'video' && previewVideo ? (
+        {kind === 'video' && shownVideo ? (
           <video
-            src={transcodeUrl(config.cdnBase, a.id, previewVideo.file)}
+            key={shownVideo.file}
+            src={transcodeUrl(config.cdnBase, a.id, shownVideo.file)}
             poster={thumbnailUrl(config, a, 480)}
             controls
             muted
@@ -137,7 +167,7 @@ export function DetailsView(props: {
             preload="metadata"
           />
         ) : (
-          <img src={thumbnailUrl(config, a, 480)} alt="" />
+          <img key={previewImage} src={previewImage} alt="" />
         )}
       </Preview>
 
@@ -171,7 +201,7 @@ export function DetailsView(props: {
           <Text size={1} muted>
             {props.allowPrivate
               ? 'This copies the file into Sanity, which then serves it from its own CDN. Sanity’s image tools (hotspot, crop, @sanity/image-url) make the sizes your page needs.'
-              : 'Your website gets a web-optimised copy, not the full file: FileSpin makes the size each spot needs (up to 2048 × 1536) and sends each browser AVIF, WebP or JPEG. Your developer sets the sizes with the plugin’s URL helpers.'}
+              : 'Your website gets a web-optimised copy, not the full file: FileSpin makes the size each spot needs and sends each browser AVIF, WebP or JPEG. Your developer sets the sizes with the plugin’s URL helpers.'}
           </Text>
           {formats.length > 0 && (
             <Stack gap={2}>
