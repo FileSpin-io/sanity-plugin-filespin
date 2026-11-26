@@ -104,6 +104,11 @@ export function videoVersions(a: FileSpinAsset): VideoVersion[] {
     .sort((x, y) => Number(x.watermarked) - Number(y.watermarked) || y.height - x.height)
 }
 
+/** Whether the video has a public adaptive stream (HLS) in FileSpin. */
+export function hasHls(a: FileSpinAsset): boolean {
+  return !!a.conversions?.['hls-video']?.public
+}
+
 /** 1080p, else 720p, else 480p, else the sharpest unwatermarked version. */
 export function bestVersion(versions: VideoVersion[]): VideoVersion | undefined {
   for (const name of ['1080p-video', '720p-video', '480p-video']) {
@@ -176,6 +181,10 @@ export function toValue(
       ...(a.metadata?.duration ? {duration: a.metadata.duration} : {}),
       variant: chosen.file,
       url: transcodeUrl(config.cdnBase, a.id, chosen.file),
+      // The stream is never watermarked, so a watermarked choice keeps its MP4 only.
+      ...(hasHls(a) && !chosen.watermarked
+        ? {hlsUrl: transcodeUrl(config.cdnBase, a.id, 'playlist.m3u8')}
+        : {}),
       posterUrl: odiUrl(config.cdnBase, a.id, {resize: '1280,1280', v: version}),
     }
   }

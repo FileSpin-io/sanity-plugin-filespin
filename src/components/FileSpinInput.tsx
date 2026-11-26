@@ -42,6 +42,7 @@ const STORED_FIELDS = [
   'duration',
   'variant',
   'url',
+  'hlsUrl',
   'posterUrl',
   'cdn',
   'version',

@@ -1,6 +1,6 @@
 {
   "name": "sanity-plugin-filespin",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Browse and insert FileSpin images and videos in Sanity Studio. Files stay in FileSpin and are served from the FileSpin CDN.",
   "keywords": [
     "sanity",

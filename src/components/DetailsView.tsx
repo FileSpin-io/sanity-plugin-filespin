@@ -16,6 +16,7 @@ import {
   dashboardAssetUrl,
   formatBytes,
   formatDuration,
+  hasHls,
   imageFormats,
   kindOf,
   thumbnailUrl,
@@ -103,6 +104,8 @@ export function DetailsView(props: {
     ? [...versions].sort((x, y) => x.height - y.height)[0]
     : undefined
   const chosenFormat = formats.find((f) => f.name === variant)
+  const chosenVersion = versions.find((v) => v.file === variant)
+  const stream = !props.allowPrivate && full !== null && hasHls(full)
   const blocked =
     !props.allowPrivate &&
     ((kind === 'image' && chosenFormat !== undefined && !chosenFormat.public) ||
@@ -163,26 +166,46 @@ export function DetailsView(props: {
         </Card>
       )}
 
-      {full && kind === 'image' && formats.length > 0 && (
-        <Stack gap={2}>
-          <Text size={1} weight="medium">
-            Format
+      {full && kind === 'image' && (
+        <Stack gap={3}>
+          <Text size={1} muted>
+            {props.allowPrivate
+              ? 'This copies the file into Sanity, which then serves it from its own CDN. Sanity’s image tools (hotspot, crop, @sanity/image-url) make the sizes your page needs.'
+              : 'Your website gets a web-optimised copy, not the full file: FileSpin makes the size each spot needs (up to 2048 × 1536) and sends each browser AVIF, WebP or JPEG. Your developer sets the sizes with the plugin’s URL helpers.'}
           </Text>
-          <Select value={variant} onChange={(e) => setVariant(e.currentTarget.value)}>
-            <option value="">Original</option>
-            {formats.map((f) => (
-              <option key={f.name} value={f.name}>
-                {f.name}
-                {f.width ? ` (${f.width} × ${f.height})` : ''}
-                {!f.public && !props.allowPrivate ? ' – private' : ''}
-              </option>
-            ))}
-          </Select>
-          {chosenFormat && !chosenFormat.public && !props.allowPrivate && (
-            <Text size={1} muted>
-              This format is private in FileSpin, so a website can’t show it. Make it public in
-              FileSpin to use it.
-            </Text>
+          {formats.length > 0 && (
+            <Stack gap={2}>
+              <Text size={1} weight="medium">
+                Format
+              </Text>
+              <Select value={variant} onChange={(e) => setVariant(e.currentTarget.value)}>
+                <option value="">
+                  {props.allowPrivate ? 'Original file' : 'Original (web-optimised)'}
+                </option>
+                {formats.map((f) => {
+                  const off = !f.public && !props.allowPrivate
+                  return (
+                    <option key={f.name} value={f.name} disabled={off}>
+                      {f.name}
+                      {f.width ? ` (${f.width} × ${f.height})` : ''}
+                      {off ? ' – private' : ''}
+                    </option>
+                  )
+                })}
+              </Select>
+              <Text size={1} muted>
+                {[
+                  props.allowPrivate
+                    ? 'Formats are other versions of this image saved in FileSpin, such as a background-removed copy.'
+                    : 'Formats are other versions of this image saved in FileSpin, such as a background-removed copy. They are web-optimised the same way.',
+                  !props.allowPrivate && formats.some((f) => !f.public)
+                    ? 'Formats that are not public in FileSpin can’t be shown on a website, so you can’t pick them here.'
+                    : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+              </Text>
+            </Stack>
           )}
         </Stack>
       )}
@@ -202,7 +225,19 @@ export function DetailsView(props: {
                 </option>
               ))}
             </Select>
-          ) : (
+          ) : null}
+          {versions.length > 0 && (
+            <Text size={1} muted>
+              {props.allowPrivate
+                ? 'This copies the video file into Sanity.'
+                : stream
+                  ? chosenVersion?.watermarked
+                    ? 'This watermarked version always plays as it is. Pick an unwatermarked version to also get adaptive streaming.'
+                    : 'This video also streams adaptively (HLS): the quality follows each viewer’s connection. Browsers that can’t stream play this version instead.'
+                  : 'The video file to play on your website. Smaller files start faster.'}
+            </Text>
+          )}
+          {versions.length === 0 && (
             <Text size={1} muted>
               {props.allowPrivate
                 ? 'Only the original file is available.'

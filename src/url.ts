@@ -42,7 +42,10 @@ export const MAX_HEIGHT = 1536
 /** @public */
 export type FileSpinAssetRef = Pick<FileSpinAssetValue, 'assetId' | 'cdn' | 'kind'> &
   Partial<
-    Pick<FileSpinAssetValue, 'variant' | 'version' | 'width' | 'height' | 'url' | 'posterUrl'>
+    Pick<
+      FileSpinAssetValue,
+      'variant' | 'version' | 'width' | 'height' | 'url' | 'posterUrl' | 'hlsUrl'
+    >
   >
 
 const clamp = (n: number | undefined, max: number) =>
@@ -124,6 +127,33 @@ export function filespinVideoUrl(asset: FileSpinAssetRef, version?: string): str
       : `${version}.mp4`
     : asset.variant || ''
   return transcodeUrl(asset.cdn, asset.assetId, file)
+}
+
+/** @public */
+export interface VideoSource {
+  src: string
+  type: 'application/vnd.apple.mpegurl' | 'video/mp4'
+}
+
+/**
+ * The `<source>` list for a video: the adaptive stream (HLS) first when there
+ * is one, then the MP4. Browsers that play HLS (Safari, iOS, Android, recent
+ * Chrome and Edge) stream at the quality each viewer's connection allows; the
+ * rest play the MP4. No player script needed.
+ *
+ * ```tsx
+ * <video poster={post.video.posterUrl} controls>
+ *   {filespinVideoSources(post.video).map((s) => <source key={s.src} {...s} />)}
+ * </video>
+ * ```
+ *
+ * @public
+ */
+export function filespinVideoSources(asset: FileSpinAssetRef): VideoSource[] {
+  const list: VideoSource[] = []
+  if (asset.hlsUrl) list.push({src: asset.hlsUrl, type: 'application/vnd.apple.mpegurl'})
+  list.push({src: filespinVideoUrl(asset), type: 'video/mp4'})
+  return list
 }
 
 /** A public video version on the CDN: its name plus ".mp4" (not its storage key). */

@@ -36,6 +36,7 @@ export function filespinAssetType(config: ResolvedConfig) {
       defineField({name: 'duration', title: 'Duration (s)', type: 'number', ...hidden}),
       defineField({name: 'variant', title: 'Version', type: 'string', ...hidden}),
       defineField({name: 'url', title: 'URL', type: 'url', ...hidden}),
+      defineField({name: 'hlsUrl', title: 'Stream URL (HLS)', type: 'url', ...hidden}),
       defineField({name: 'posterUrl', title: 'Poster URL', type: 'url', ...hidden}),
       defineField({name: 'cdn', title: 'CDN', type: 'url', ...hidden}),
       defineField({name: 'version', title: 'Image version', type: 'number', ...hidden}),

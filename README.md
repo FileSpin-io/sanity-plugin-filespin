@@ -16,7 +16,7 @@ Two ways to use it. You can use both in the same Studio:
 | Where the file lives | Stays in FileSpin | Copied into Sanity |
 | Served from | FileSpin CDN (resized on the fly, AVIF/WebP) | Sanity CDN |
 | Updates in FileSpin | New uploads of the same asset show up | The copy doesn't change |
-| Video | Yes (public web versions, e.g. 720p MP4) | Yes, into `file` fields |
+| Video | Yes: adaptive streaming (HLS) when the video has a stream, plus a public MP4 version such as 720p | Yes, into `file` fields |
 | Best for | New schemas, brand-controlled assets | Existing `image` fields, Sanity hotspot/crop |
 
 Each editor signs in with their own FileSpin account. They see exactly what
@@ -66,9 +66,18 @@ export const post = defineType({
 `options.accept` can be `'image'` or `'video'`. Leave it out to allow both.
 
 Editors press **Choose from FileSpin**, sign in the first time, and click an
-asset. The **(i)** button on a tile shows details, metadata and versions: an
-image's formats (custom conversions) or a video's web versions. Images get an
-alternative text box.
+asset. The **(i)** button on a tile shows details, metadata and versions. Images
+get an alternative text box.
+
+- **Original (web-optimised)** is the default for images. It is not the full
+  file: your website gets a copy FileSpin makes on the fly, at the size each
+  spot needs (up to 2048 × 1536), as AVIF, WebP or JPEG.
+- **Formats** are other versions of the image saved in FileSpin, such as a
+  background-removed copy. They are web-optimised the same way. Formats that
+  are not public in FileSpin can't be shown on a website, so they can't be
+  picked here.
+- **Versions** are a video's public MP4 files (1080p, 720p, 480p…). When the
+  video also has an adaptive stream (HLS) in FileSpin, the field stores it too.
 
 ### What the field stores
 
@@ -84,6 +93,7 @@ alternative text box.
   "duration": 31.5,                // seconds, video only
   "variant": "720p-video.mp4",     // chosen format or video version, if any
   "url": "https://cdn.filespin.io/api/v1/assets/0ec02ba4…/conversions?resize=2048,1365",
+  "hlsUrl": "https://cdn.filespin.io/…/transcodes/playlist.m3u8", // video with a stream only
   "posterUrl": "https://cdn.filespin.io/…",  // the image, or a video's poster frame
   "cdn": "https://cdn.filespin.io",
   "version": 3,                    // changes when the file is replaced in FileSpin
@@ -94,17 +104,20 @@ alternative text box.
 Query it like any object:
 
 ```groq
-*[_type == "post"]{title, hero{url, width, height, alt}, video{url, posterUrl}}
+*[_type == "post"]{title, hero, video}
 ```
 
 ### Show it on your website
 
-`url` works as is. For other sizes, crops and `srcset`, use the helpers from
-`sanity-plugin-filespin/url`. They have no dependencies and are safe in any
-frontend:
+**Use the helpers from `sanity-plugin-filespin/url`, so each screen gets the
+right size.** `url` on its own works, but it is always the largest size (up to
+2048 × 1536), so a phone downloads the same image as a desktop. The helpers add
+FileSpin's on-demand resize and crop to the URL, the browser picks the size it
+needs from `srcset`, and the CDN makes and caches that size. They have no
+dependencies and are safe in any frontend:
 
 ```tsx
-import {filespinImageUrl, filespinSrcSet, filespinVideoUrl} from 'sanity-plugin-filespin/url'
+import {filespinImageUrl, filespinSrcSet, filespinVideoSources} from 'sanity-plugin-filespin/url'
 
 <img
   src={filespinImageUrl(post.hero, {width: 800})}
@@ -115,8 +128,16 @@ import {filespinImageUrl, filespinSrcSet, filespinVideoUrl} from 'sanity-plugin-
 
 <img src={filespinImageUrl(post.hero, {width: 400, height: 400, crop: 'face'})} alt="" />
 
-<video src={filespinVideoUrl(post.video)} poster={post.video.posterUrl} controls />
+<video poster={post.video.posterUrl} controls playsInline>
+  {filespinVideoSources(post.video).map((s) => <source key={s.src} {...s} />)}
+</video>
 ```
+
+`filespinVideoSources` lists the adaptive stream (HLS) first when the video has
+one, then the MP4. Browsers that play HLS (Safari, iOS, Android, recent Chrome
+and Edge) stream at the quality each viewer's connection allows; the rest play
+the MP4. No player script needed. `filespinVideoUrl(post.video)` gives the MP4
+alone.
 
 | Option | Meaning |
 |---|---|
@@ -156,7 +177,9 @@ for these.
 ## For your FileSpin admin
 
 - **Videos** need a public web version (such as 720p) to be used in the
-  FileSpin asset field. Without one, the plugin explains what to do.
+  FileSpin asset field. Without one, the plugin explains what to do. Make the
+  HLS stream public too, for adaptive streaming. Watermarked versions play as
+  MP4 only, because the stream has no watermark.
 - **Image formats** (custom conversions) must be public to be used in the
   FileSpin asset field. Private ones can still be copied into Sanity.
 - Editors see what their own FileSpin role allows. Nobody needs admin rights.

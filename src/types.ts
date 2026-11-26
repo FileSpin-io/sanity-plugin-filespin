@@ -29,6 +29,12 @@ export interface FileSpinAssetValue {
   variant?: string
   /** Ready to use: the image (largest FileSpin serves, 2048 x 1536) or the MP4. */
   url: string
+  /**
+   * Video only: the adaptive stream (HLS playlist), when the video has a public
+   * one in FileSpin and the chosen version is not watermarked. Play it first,
+   * with `url` (the MP4) as the fallback: see `filespinVideoSources`.
+   */
+  hlsUrl?: string
   /** A still to show: the image itself, or a video's poster frame. */
   posterUrl?: string
   /** The CDN the URLs come from, e.g. "https://cdn.filespin.io". */
